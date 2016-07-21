@@ -2,6 +2,7 @@ $(function(){
 	
 	/* Configuração */
 	var DEG = 'c';		// c para celsius, f para fahrenheit
+	var cityInit, codeInit;
 	
 	var weatherIconMap = [
 		'storm', 'lightning', 'snow', 'hail',
@@ -173,26 +174,7 @@ $(function(){
 		scroller = $('#scroller'),
 		location = $('p.location');
 	
-	function getPrevision(estado, cidade) {
-		var code = 'SC'; 
-		var city = 'Blumenau';
-
-		if(estado != "" && estado != undefined && cidade != ""  && cidade != undefined ){
-	        city = cidade;
-	        code = estado;
-		} else if (document.cookie) {
-			elms = document.cookie.split('$');
-			if(elms.length == 2){
-				var elmEstado = elms[0].split('=')
-				if(elmEstado.length == 2){
-					var elmCidade = elms[1].split('=')
-					if(elmCidade.length == 2){
-	        			code = elmEstado[1];
-						city = elmCidade[1];
-					}
-				}
-			}
-		}
+	function getPrevision(city, code) {
 
 	    // Yahoo's PlaceFinder API http://developer.yahoo.com/geo/placefinder/
 	    var wsql = 'select * from weather.forecast where woeid in (select woeid from geo.places(1) where text="'+city+', '+code+', BR")  and u="'+ DEG +'"',
@@ -236,9 +218,6 @@ $(function(){
 						}
 	                    
 	                }
-	                else {
-	                    showError("Erro ao recuperar dados meteorológicos!");
-	                }
 	            });
 	    
 	}
@@ -273,27 +252,9 @@ $(function(){
 
 	}
 
-	function selecionaCidade(){
+	function selecionaCidade(city, code){
 		$.getJSON('dist/js/estados_cidades.json', function (data) {
-				var city, code;
-				if (document.cookie) {
-					elms = document.cookie.split('$');
-					if(elms.length == 2){
-						var elmEstado = elms[0].split('=')
-						if(elmEstado.length == 2){
-							var elmCidade = elms[1].split('=')
-							if(elmCidade.length == 2){
-			        			code = elmEstado[1];
-								city = elmCidade[1];
-
-								$('.favoritar').hide();
-							}
-						}
-					}
-				}else{
-					code = 'SC'; 
-					city = 'Blumenau';
-				}
+				
 				
 				$("#cidades").val(city);		
 
@@ -305,7 +266,6 @@ $(function(){
 				$("#estados").html(options);				
 				
 				$("#estados").change(function () {
-					$("#cidades").val('');
 					
 					var cidades = [];
 					var str = $("#estados option:selected").val();	
@@ -322,7 +282,7 @@ $(function(){
 				      source: cidades
 				    });
 
-				})
+				}).change();
 
 			});
 
@@ -385,11 +345,34 @@ $(function(){
 
 		$('.valepraia .box-body').html("<h3>" + title + "</h3> <h5>" + text + "</h5>");
 	}
+
+	function setCityCode(){
+		
+		if (document.cookie) {
+			elms = document.cookie.split('$');
+			if(elms.length == 2){
+				var elmEstado = elms[0].split('=')
+				if(elmEstado.length == 2){
+					var elmCidade = elms[1].split('=')
+					if(elmCidade.length == 2){
+	        			codeInit = elmEstado[1];
+						cityInit = elmCidade[1];
+
+						$('.favoritar').hide();
+					}
+				}
+			}
+		}else{
+			codeInit = 'SC'; 
+			cityInit = 'Blumenau';
+		}
+	}
     
 
 	function init(){
-		selecionaCidade();
-		getPrevision();
+		setCityCode();
+		selecionaCidade(cityInit, codeInit);
+		getPrevision(cityInit, codeInit);
 		favoritar();
 
 	}
